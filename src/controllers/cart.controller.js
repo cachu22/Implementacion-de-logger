@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import { cartService } from "../service/index.js";
 import { adminOrUserAuth } from "../middlewares/Auth.middleware.js";
+import { CustomError, CART_ERROR_CODE } from "../service/errors/CustomError.js";
+import { addProductToCartError } from "../service/errors/info.js";
+
 
 class CartController {
     constructor() {
@@ -54,32 +57,40 @@ class CartController {
             const { quantity } = req.body;
 
             if (!mongoose.Types.ObjectId.isValid(cid)) {
-                return res.status(400).json({ status: 'error', message: 'El ID del carrito no es válido' });
+                const errorMessage = `El ID del carrito no es válido: ${cid}`;
+                throw CustomError.createError({
+                    name: 'InvalidCartIdError',
+                    cause: new Error(errorMessage),
+                    message: addProductToCartError(pid, cid, errorMessage),
+                    code: CART_ERROR_CODE
+                });
             }
 
             if (!mongoose.Types.ObjectId.isValid(pid)) {
-                return res.status(400).json({ status: 'error', message: 'El ID del producto no es válido' });
+                const errorMessage = `El ID del producto no es válido: ${pid}`;
+                throw CustomError.createError({
+                    name: 'InvalidProductIdError',
+                    cause: new Error(errorMessage),
+                    message: addProductToCartError(pid, cid, errorMessage),
+                    code: CART_ERROR_CODE
+                });
             }
 
             if (!quantity || isNaN(quantity) || quantity <= 0) {
-                return res.status(400).json({ status: 'error', message: 'La cantidad del producto no es válida' });
+                const errorMessage = `La cantidad del producto no es válida: ${quantity}`;
+                throw CustomError.createError({
+                    name: 'InvalidQuantityError',
+                    cause: new Error(errorMessage),
+                    message: addProductToCartError(pid, cid, errorMessage),
+                    code: CART_ERROR_CODE
+                });
             }
 
             const result = await this.cartService.addProductToCart(cid, pid, quantity);
             res.send({ status: 'success', payload: result });
         } catch (error) {
-            const errorMessage = addProductToCartError(pid, cid, error.message);
-            try {
-                CustomError.createError({
-                    name: 'AddProductToCartError',
-                    cause: error,
-                    message: errorMessage,
-                    code: CART_ERROR_CODE
-                });
-            } catch (customError) {
-                console.error(customError);
-                res.status(500).json({ status: 'error', message: customError.message, code: customError.code });
-            }
+            console.error('Error al agregar el producto al carrito:', error);
+            res.status(500).json({ status: 'error', message: error.message, code: error.code });
         }
     };
 
