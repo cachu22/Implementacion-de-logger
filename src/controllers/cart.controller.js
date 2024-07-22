@@ -68,8 +68,18 @@ class CartController {
             const result = await this.cartService.addProductToCart(cid, pid, quantity);
             res.send({ status: 'success', payload: result });
         } catch (error) {
-            console.error('Error al agregar el producto al carrito:', error);
-            res.status(500).json({ status: 'error', message: 'Error al agregar el producto al carrito' });
+            const errorMessage = addProductToCartError(pid, cid, error.message);
+            try {
+                CustomError.createError({
+                    name: 'AddProductToCartError',
+                    cause: error,
+                    message: errorMessage,
+                    code: CART_ERROR_CODE
+                });
+            } catch (customError) {
+                console.error(customError);
+                res.status(500).json({ status: 'error', message: customError.message, code: customError.code });
+            }
         }
     };
 

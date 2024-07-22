@@ -7,3 +7,6 @@ export class CustomError {
         throw error
     }
 }
+
+//Error para los carritos
+export const CART_ERROR_CODE = 3;

@@ -20,5 +20,5 @@ export const handleErrors = () => (error, req, res, next) => {
             break;
     }
 
-    res.status(statusCode).json({ status: 'error', error: errorMessage });
+    res.status(statusCode).json({ status: 'error', error: errorMessage, code: err.code });
 };

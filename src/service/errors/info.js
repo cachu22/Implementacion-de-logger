@@ -7,18 +7,20 @@ export const generateUserError = (user) => {
     `;
 }
 
-export const addProductError = (newProduct) => {
+export const addProductError = (Product) => {
     return `Uno de los campos es erroneo o no se encuentra.
     Los requerimientos son:
-    *title: Necesita ser un string, pero se recibió ${newProduct.title}
-    *model: Necesita ser un string, pero se recibió ${newProduct.model}
-    *description: Necesita ser un string, pero se recibió ${newProduct.description}
-    *price: Necesita ser un number, pero se recibió ${newProduct.price}
-    *thumbnails: Necesita ser un string, pero se recibió ${newProduct.thumbnails}
-    *stock: Necesita ser un number, pero se recibió ${newProduct.stock}
-    *category: Necesita ser un string, pero se recibió ${newProduct.category}
+    *title: Necesita ser un string, pero se recibió ${Product.title}
+    *model: Necesita ser un string, pero se recibió ${Product.model}
+    *description: Necesita ser un string, pero se recibió ${Product.description}
+    *price: Necesita ser un number, pero se recibió ${Product.price}
+    *thumbnails: Necesita ser un string, pero se recibió ${Product.thumbnails}
+    *stock: Necesita ser un number, pero se recibió ${Product.stock}
+    *category: Necesita ser un string, pero se recibió ${Product.category}
     `;
 }
-// export const addProductError = () => {
-//     return 
-// }
+
+export const addProductToCartError = (productId, cartId, errorDetails) => {
+    return `Error al agregar el producto con ID ${productId} al carrito con ID ${cartId}.
+    Detalles del error: ${errorDetails}`;
+}
