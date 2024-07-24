@@ -1,14 +1,18 @@
+import { logger } from "../../utils/logger.js";
+
 export const generateUserError = (user) => {
-    return `Hay una de las propiedades del usuario incompleta o no valida.
+    const errorMessage = `Hay una de las propiedades del usuario incompleta o no valida.
     Listado de propiedades requeridos:
     *first_name: necesita ser un string, pero se recibió ${user.first_name}
     *last_name: necesita ser un string, pero se recibió ${user.last_name}
     *email: necesita ser un string, pero se recibió ${user.email}
     `;
+    logger.error('Error en la creación de usuario - src/service/errors/info.js:', errorMessage);
+    return errorMessage;
 }
 
 export const addProductError = (Product) => {
-    return `Uno de los campos es erroneo o no se encuentra.
+    const errorMessage = `Uno de los campos es erroneo o no se encuentra.
     Los requerimientos son:
     *title: Necesita ser un string, pero se recibió ${Product.title}
     *model: Necesita ser un string, pero se recibió ${Product.model}
@@ -18,9 +22,13 @@ export const addProductError = (Product) => {
     *stock: Necesita ser un number, pero se recibió ${Product.stock}
     *category: Necesita ser un string, pero se recibió ${Product.category}
     `;
+    logger.error('Error en la adición del producto - src/service/errors/info.js:', errorMessage);
+    return errorMessage;
 }
 
 export const addProductToCartError = (productId, cartId, errorDetails) => {
-    return `Error al agregar el producto con ID ${productId} al carrito con ID ${cartId}.
+    const errorMessage = `Error al agregar el producto con ID ${productId} al carrito con ID ${cartId}.
     Detalles del error: ${errorDetails}`;
+    logger.error('Error al agregar producto al carrito - src/service/errors/info.js:', errorMessage);
+    return errorMessage;
 }

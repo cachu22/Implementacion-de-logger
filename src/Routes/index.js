@@ -5,7 +5,7 @@ import { cartsRouterFS } from './api/carts.routerFS.js'
 import sessionsRouter from './api/sessions.router.js';
 import usersRouter from './api/users.router.js';
 import routerMSG from '../daos/messageDao.mongo.js';
-import routerCookie from './Cookies/pruebas.router.js';
+import routerCookie from './Pruebas/pruebas.router.js';
 import { cartsRouterMSG } from './api/carts.routerDB.js';
 import productsRouterDB from './api/productsRouterDB.js';
 import { mocking } from "./api/mockingProducts.router.js";

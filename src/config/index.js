@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { program } from '../utils/commander.js';
 import { MongoSingleton } from '../utils/MongoSingleton.js';
+import { logger } from '../utils/logger.js';
 
 // Cargar las variables de entorno
 const { mode } = program.opts();
@@ -24,12 +25,13 @@ export const objectConfig = {
 // Función para conectar a la base de datos
 export const connectDb = async () => {
     try {
+        logger.info('Iniciando conexión a la base de datos con URI - Log de /src/config/index.js:', objectConfig.mongo_uri);
         MongoSingleton.getInstance(objectConfig.mongo_uri);
-        console.log('Conexión a la base de datos establecida correctamente archivo index.js');
+        logger.info('Conexión a la base de datos establecida correctamente - Log de /src/config/index.js');
     } catch (error) {
-        console.error('Error al conectar a la base de datos:', error);
+        logger.error('Error al conectar a la base de datos - Log de /src/config/index.js:', error);
     }
 };
 
-// Llamar a la función de conexión al iniciar
-connectDb();
+// Llamada a la función de conexión para asegurarse de que la base de datos esté conectada
+// connectDb();

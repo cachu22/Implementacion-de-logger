@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { cartsModel } from "../models/carts.models.js";
-import { generateUniqueId } from "../../../utils/utils.js";
+import { logger } from "../../../utils/logger.js";
 
 class CartDaoMongo {
     constructor(){
@@ -8,44 +8,55 @@ class CartDaoMongo {
     }
 
     async getAll(explain = false) {
-        const query = this.model.find();
-        if (explain) {
-            return await query.explain('executionStats');
+        try {
+            const query = this.model.find();
+            if (explain) {
+                const explanation = await query.explain('executionStats');
+                logger.info('Explicación de la consulta - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', explanation);
+                return explanation;
+            }
+            const carts = await query;
+            logger.info('Todos los carritos obtenidos - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', carts);
+            return carts;
+        } catch (error) {
+            logger.error('Error al obtener todos los carritos - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', error.message);
+            throw new Error('Error al obtener todos los carritos: ' + error.message);
         }
-        return await query;
     }
 
     async getCartById(_id) { 
-        const cart = await this.model.findById(_id).populate('products.product');
-        if (!cart) {
-            throw new Error('El carrito no se encontró');
+        try {
+            const cart = await this.model.findById(_id).populate('products.product');
+            if (!cart) {
+                logger.error('El carrito no se encontró con ID - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', _id);
+                throw new Error('El carrito no se encontró');
+            }
+            logger.info('Carrito obtenido con éxito - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', cart);
+            return cart;
+        } catch (error) {
+            logger.error('Error al obtener el carrito por ID - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', error.message);
+            throw new Error('Error al obtener el carrito por ID: ' + error.message);
         }
-        return cart;
     }
 
-    // async create() {
-    //     try {
-    //         const newCart = await this.model.create({ products: [] });
-    //         console.log('Nuevo carrito creado:', newCart);
-    //         return newCart;
-    //     } catch (error) {
-    //         console.error('Error al crear el carrito:', error);
-    //         throw new Error('Error al crear el carrito: ' + error.message);
-    //     }
-    // }
-
-    create = async (cartData) => {
-        const newCart = new this.model(cartData);
-        const savedCart = await newCart.save();
-        console.log('log de CartDaoMongo-create', savedCart);
-        return savedCart;
-    };
+    async create(cartData) {
+        try {
+            const newCart = new this.model(cartData);
+            const savedCart = await newCart.save();
+            logger.info('Nuevo carrito creado - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', savedCart);
+            return savedCart;
+        } catch (error) {
+            logger.error('Error al crear el carrito - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', error.message);
+            throw new Error('Error al crear el carrito: ' + error.message);
+        }
+    }
 
     async addProductToCart(cartId, productId, quantity) {
         try {
             // Verificar si el carrito existe
             const cart = await this.model.findById(cartId);
             if (!cart) {
+                logger.error('El carrito no existe con ID - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', cartId);
                 throw new Error('El carrito no existe');
             }
 
@@ -64,84 +75,66 @@ class CartDaoMongo {
 
             // Guardar los cambios en el carrito
             const updatedCart = await cart.save();
-            console.log('Producto agregado al carrito:', updatedCart);
+            logger.info('Producto agregado al carrito - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', updatedCart);
             return updatedCart;
         } catch (error) {
-            console.error('Error al agregar el producto al carrito:', error);
+            logger.error('Error al agregar el producto al carrito - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', error.message);
             throw new Error('Error al agregar el producto al carrito: ' + error.message);
         }
     }
 
     async updateCartProducts(cartId, updatedProducts) {
         try {
-            // Buscar el carrito por su ID en la base de datos
             const cart = await this.model.findById(cartId);
             if (!cart) {
+                logger.error('El carrito no existe con ID - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', cartId);
                 throw new Error('El carrito no existe');
             }
 
-            // Iterar sobre el arreglo de productos actualizados
             for (const updatedProduct of updatedProducts) {
                 const { productId, quantity } = updatedProduct;
-
-                // Buscar si el producto ya existe en el carrito
                 const existingProductIndex = cart.products.findIndex(product => product.product.toString() === productId);
 
                 if (existingProductIndex !== -1) {
-                    // Si el producto ya está en el carrito, aumentar su cantidad
                     cart.products[existingProductIndex].quantity += quantity;
                 } else {
-                    // Si el producto no está en el carrito, agregarlo
                     cart.products.push({ product: productId, quantity });
                 }
             }
 
-            // Guardar los cambios en el carrito en la base de datos
             await cart.save();
-
-            // Devolver el carrito actualizado
+            logger.info('Productos del carrito actualizados con éxito - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', cart);
             return cart;
         } catch (error) {
+            logger.error('Error al actualizar los productos del carrito - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', error.message);
             throw new Error('Error al actualizar los productos del carrito: ' + error.message);
         }
     }
 
     async updateProductQuantity(cartId, productId, quantity) {
         try {
-            console.log(`Buscando el carrito con ID: ${cartId}`);
+            logger.info(`Buscando el carrito con ID - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js: ${cartId}`);
             const cart = await this.model.findById(cartId);
             if (!cart) {
-                console.error('El carrito no existe');
+                logger.error('El carrito no existe con ID - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', cartId);
                 throw new Error('El carrito no existe');
             }
 
-            console.log(`Carrito encontrado: ${JSON.stringify(cart)}`);
-            console.log(`Buscando el producto con ID: ${productId} en el carrito`);
-
-            // Verificar el contenido del carrito antes de buscar el producto
-            cart.products.forEach((item, index) => {
-                console.log(`Producto ${index + 1}: ${JSON.stringify(item)}`);
-            });
-
-            // Asegurarnos de que ambos IDs se comparen como ObjectId
+            logger.info(`Buscando el producto con ID - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js: ${productId} en el carrito`);
             const product = cart.products.find(item => 
                 new mongoose.Types.ObjectId(item.product).equals(new mongoose.Types.ObjectId(productId))
             );
             if (!product) {
-                console.error('El producto no está en el carrito');
+                logger.error('El producto no está en el carrito con ID - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', productId);
                 throw new Error('El producto no está en el carrito');
             }
 
-            console.log(`Actualizando la cantidad del producto a: ${quantity}`);
             product.quantity = quantity;
-
-            console.log('Guardando el carrito actualizado');
             await cart.save();
-
-            console.log('Carrito actualizado exitosamente');
+            logger.info('Cantidad del producto actualizada exitosamente - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', cart);
             return cart;
         } catch (error) {
-            console.error('Error al actualizar la cantidad del producto en el carrito:', error);
+            logger.error('Error al actualizar la cantidad del producto en el carrito - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', error.message);
             throw new Error('Error al actualizar la cantidad del producto en el carrito: ' + error.message);
         }
     }
@@ -150,39 +143,40 @@ class CartDaoMongo {
         try {
             const cart = await this.model.findById(cartId).populate('products.product');
             if (!cart) {
+                logger.error('El carrito no existe con ID - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', cartId);
                 throw new Error('El carrito no existe');
             }
 
             const productIndex = cart.products.findIndex(item => item.product._id.toString() === productId);
             if (productIndex === -1) {
+                logger.error('El producto no está en el carrito con ID - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', productId);
                 throw new Error('El producto no está en el carrito');
             }
 
             cart.products.splice(productIndex, 1);
             await cart.save();
+            logger.info('Producto eliminado del carrito - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', cart);
             return cart;
         } catch (error) {
+            logger.error('Error al eliminar el producto del carrito - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', error.message);
             throw new Error('Error al eliminar el producto del carrito: ' + error.message);
         }
     }
 
     async emptyCart(cartId) {
         try {
-            // Buscar el carrito por su ID en la base de datos
             const cart = await this.model.findById(cartId);
             if (!cart) {
+                logger.error('El carrito no existe con ID - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', cartId);
                 throw new Error('El carrito no existe');
             }
 
-            // Vaciar los productos del carrito
             cart.products = [];
-
-            // Guardar los cambios en el carrito en la base de datos
             await cart.save();
-
-            // Devolver el carrito actualizado
+            logger.info('Carrito vaciado con éxito - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', cart);
             return cart;
         } catch (error) {
+            logger.error('Error al vaciar el carrito - Log de /src/daos/MONGO/MONGODBNUBE/cartsDao.mongo.js:', error.message);
             throw new Error('Error al vaciar el carrito: ' + error.message);
         }
     }

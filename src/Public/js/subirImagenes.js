@@ -6,6 +6,7 @@ const handleImageUpload = () => {
 
     inputFile.addEventListener('change', function(event) {
         const file = event.target.files[0];
+        console.log('Archivo seleccionado - log de /src/Public/js/subirImagenes.js:', file);
 
         // Validar que se haya seleccionado un archivo y sea una imagen
         if (file && file.type.startsWith('image/')) {
@@ -14,6 +15,7 @@ const handleImageUpload = () => {
             reader.onload = function(e) {
                 imagePreview.src = e.target.result;
                 imagePreviewContainer.style.display = 'block'; // Mostrar el contenedor de vista previa
+                console.log('Vista previa de la imagen mostrada - log de /src/Public/js/subirImagenes.js.');
 
                 // Enviar la imagen al servidor
                 uploadImage(file);
@@ -23,6 +25,7 @@ const handleImageUpload = () => {
             // Limpiar la vista previa si no se seleccionó una imagen válida
             imagePreview.src = '';
             imagePreviewContainer.style.display = 'none'; // Ocultar el contenedor de vista previa
+            console.log('Archivo no válido seleccionado - log de /src/Public/js/subirImagenes.js.');
         }
     });
 
@@ -32,6 +35,7 @@ const handleImageUpload = () => {
         inputFile.value = '';
         imagePreview.src = '';
         imagePreviewContainer.style.display = 'none';
+        console.log('Imagen eliminada - log de /src/Public/js/subirImagenes.js.');
     });
 };
 
@@ -46,14 +50,14 @@ const uploadImage = (file) => {
     })
     .then(response => {
         if (response.ok) {
-            console.log('¡Imagen subida con éxito!');
+            console.log('¡Imagen subida con éxito! - log de /src/Public/js/subirImagenes.js');
             // Puedes realizar acciones adicionales aquí después de que la imagen se haya subido exitosamente
         } else {
-            console.error('Error al subir la imagen:', response.statusText);
+            console.error('Error al subir la imagen - log de /src/Public/js/subirImagenes.js:', response.statusText);
         }
     })
     .catch(error => {
-        console.error('Error al subir la imagen:', error);
+        console.error('Error al subir la imagen - log de /src/Public/js/subirImagenes.js:', error);
     });
 };
 

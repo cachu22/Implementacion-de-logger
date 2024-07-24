@@ -3,7 +3,7 @@ import { EError } from "../service/errors/enums.js";
 import { addProductError } from "../service/errors/info.js";
 import { ProductService } from "../service/index.js";
 import { generateProducts } from "../utils/generateProductsMock.js";
-
+import { logger } from "../utils/logger.js";
 
 class ProductController {
     constructor() {
@@ -22,12 +22,17 @@ class ProductController {
     }
 
     // Obtener todos los productos
-    getAll = async ( req, res ) => {
-        const products = await this.productService.getAll()
-        res.send({status: 'success', payload: products})
+    getAll = async (req, res) => {
+        try {
+            const products = await this.productService.getAll();
+            res.send({ status: 'success', payload: products });
+        } catch (error) {
+            logger.error('Error al obtener todos los productos - Log de /src/controllers/product.controller.js:', error);
+            res.status(500).send({ status: 'error', message: 'Error al obtener todos los productos' });
+        }
     }
 
-    //Traer productos paginados para el front
+    // Traer productos paginados para el front
     getAllPaginated = async (req, res) => {
         try {
             const {
@@ -41,8 +46,8 @@ class ProductController {
                 availability
             } = req.query;
 
-            const parsedLimit = parseInt(limit, 9);
-            const parsedNumPage = parseInt(numPage, 9);
+            const parsedLimit = parseInt(limit, 10);
+            const parsedNumPage = parseInt(numPage, 10);
             const parsedExplain = explain === 'true';
             // const parsedAvailability = availability === 'true';
 
@@ -53,13 +58,13 @@ class ProductController {
                 status,
                 sortByPrice,
                 order,
-                explain, parsedExplain,
+                explain: parsedExplain,
                 availability //parsedAvailability
             });
-            // console.log('result de product.controller.js-getAllpaginated', products);
+
             res.send({ status: 'success', payload: products });
         } catch (error) {
-            console.error(error);
+            logger.error('Error al obtener productos paginados - Log de /src/controllers/product.controller.js:', error);
             res.status(500).send({ status: 'error', message: 'Error al obtener todos los productos' });
         }
     };
@@ -73,12 +78,12 @@ class ProductController {
             }
             const product = await this.productService.getOne(productId);
             if (!product) {
-                return res.status(404).json({ status: 'error', message: 'product not found' });
+                return res.status(404).json({ status: 'error', message: 'Product not found' });
             }
-            console.log('datos', product);
+            logger.info('Datos del producto - Log de /src/controllers/product.controller.js:', product);
             res.json({ status: 'success', payload: product });
         } catch (error) {
-            console.log(error);
+            logger.error('Error al obtener el producto - Log de /src/controllers/product.controller.js:', error);
             res.status(500).json({ status: 'error', message: 'Server error' });
         }
     }
@@ -90,7 +95,7 @@ class ProductController {
             const result = await this.productService.getAll({ category });
             res.send({ status: 'success', payload: result });
         } catch (error) {
-            console.error('Error al obtener productos por categoría:', error);
+            logger.error('Error al obtener productos por categoría - Log de /src/controllers/product.controller.js:', error);
             res.status(500).send({ status: 'error', message: 'Error al obtener productos por categoría' });
         }
     };
@@ -102,7 +107,7 @@ class ProductController {
             const result = await this.productService.getAll({ availability });
             res.send({ status: 'success', payload: result });
         } catch (error) {
-            console.error('Error al obtener productos por disponibilidad:', error);
+            logger.error('Error al obtener productos por disponibilidad - Log de /src/controllers/product.controller.js:', error);
             res.status(500).send({ status: 'error', message: 'Error al obtener productos por disponibilidad' });
         }
     };
@@ -120,77 +125,40 @@ class ProductController {
             const result = await this.productService.getAll({ sortByPrice, order });
             res.send({ status: 'success', payload: result });
         } catch (error) {
-            console.error('Error al obtener productos ordenados por precio:', error);
+            logger.error('Error al obtener productos ordenados por precio - Log de /src/controllers/product.controller.js:', error);
             res.status(500).send({ status: 'error', message: 'Error al obtener productos ordenados por precio' });
         }
     };
 
     // Crear un nuevo producto
-    // create = async (req, res) => {
-    //     try {
-    //         const productData = req.body;
-    //         const newProduct = await this.productService.create(productData);
-    //         res.status(201).json({ status: 'true', payload: newProduct });
-    //     } catch (error) {
-    //         res.status(500).json({ status: 'error', message: 'Error al agregar un nuevo producto', error: error.message });
-    //     }
-    // };
-
-    // create = async (req, res, next) => {
-    //     try {
-    //         const { title, model, description, price, thumbnails, stock, category } = req.body;
-            
-    //         if (
-    //             !title || typeof title !== 'string' ||
-    //             !model || typeof model !== 'string' ||
-    //             !description || typeof description !== 'string' ||
-    //             !price || typeof price !== 'number' ||
-    //             !thumbnails || typeof thumbnails !== 'string' ||
-    //             !stock || typeof stock !== 'number' ||
-    //             !category || typeof category !== 'string'
-    //         ) {
-    //             return next(CustomError.createError({
-    //                 name: 'ProductValidationError',
-    //                 cause: addProductError(req.body),
-    //                 message: 'Error al crear el producto',
-    //                 code: EError.INVALID_TYPES_ERROR
-    //             }));
-    //         }
-
-    //         const newProduct = await this.productService.create(req.body);
-    //         res.status(201).json({ status: 'true', payload: newProduct });
-    //     } catch (error) {
-    //         next(error); // Pasar el error al middleware de manejo de errores
-    //     }
-    // };
-
     create = async (req, res) => {
         try {
-            const { title, model, description, price, thumbnails, stock, category } = req.body;
-    
-            if (!title || !model || !description || !price || !thumbnails || !stock || !category) {
-                CustomError.createError({
-                    name: 'Error al agregar un producto',
-                    cause: addProductError({ title, model, description, price, thumbnails, stock, category }),
-                    message: 'Error al agregar el producto. Verifique los datos ingresados.',
-                    code: EError.INVALID_TYPES_ERROR // Puedes definir este código en tu archivo enums.js
+            const { title, model, description, price, code, thumbnails, stock, category } = req.body;
+
+            if (!title || !model || !description || !price || !thumbnails || !code || !stock || !category) {
+                console.error('Error al crear el producto - Faltan datos para crear el producto - Log de /src/controllers/product.controller.js');
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Faltan datos para crear el producto'
                 });
             }
-    
+
             const newProduct = {
                 title,
                 model,
                 description,
                 price,
                 thumbnails,
+                code,
                 stock,
                 category
             };
-    
+
             const result = await this.productService.create(newProduct);
-            res.status(201).json({ status: 'true', payload: result });
+            res.status(201).json({ status: 'success', payload: result });
         } catch (error) {
-            console.log(error);
+            console.error('Error al crear el producto - Log de /src/controllers/product.controller.js:', error);
+            res.status(500).json({ status: 'error', message: 'Error al agregar el producto', error: error.message });
         }
     };
 
@@ -202,6 +170,7 @@ class ProductController {
             const result = await this.productService.updateProduct(pid, updatedProductData);
             res.send({ status: 'success', payload: result });
         } catch (error) {
+            console.error('Error al actualizar el producto - Log de /src/controllers/product.controller.js:', error);
             res.status(500).send({ status: 'error', message: 'Error al actualizar el producto', error: error.message });
         }
     };
@@ -213,10 +182,10 @@ class ProductController {
             const result = await this.productService.deleteProduct(pid);
             res.send({ status: 'success', payload: result });
         } catch (error) {
+            logger.error('Error al eliminar el producto - Log de /src/controllers/product.controller.js:', error);
             res.status(500).send({ status: 'error', message: 'Error al eliminar el producto', error: error.message });
         }
     };
-
 }
 
 export default ProductController;

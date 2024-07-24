@@ -1,5 +1,4 @@
 import express from 'express';
-
 import { __dirname } from "./utils/utils.js";
 import Handlebars from 'express-handlebars';
 import { productsSocket } from './utils/productsSocket.js';
@@ -22,26 +21,26 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import clientMensajeria from './Routes/api/clientMessage.js';
 import { handleErrors } from './middlewares/errors/index.js';
+import { addLogger, logger } from './utils/logger.js';
+
+logger.info("Inicializando servidor... - /server.js");
 
 const cartData = JSON.parse(fs.readFileSync(__dirname + '/file/carts.json', 'utf-8'));
+// logger.info('Datos del carrito cargados- /server.js: ', cartData);
 
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
-const PORT = objectConfig.port;
+const { port } = objectConfig;
 
-// const appUse = midd => {
-//     return app.use(mid)
-// }
-
-// Conectar a la base de datos
+logger.info("Conectando a la base de datos... - /server.js");
 connectDb().then(() => {
-    console.log('Conectado a la base de datos archivo server');
+    logger.info('Conectado a la base de datos archivo server - /server.js');
 }).catch(error => {
-    console.error('Error al conectar a la base de datos archivo server:', error);
+    logger.error('Error al conectar a la base de datos archivo server - /server.js:', error);
     process.exit(1);
 });
-connectDb(); //Duplicado a proposito para ver error
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/Public'));
@@ -50,13 +49,15 @@ initializePassport();
 app.use(passport.initialize());
 
 const mode = process.argv[2] === '--mode' && process.argv[3] ? process.argv[3] : 'development';
-const envFilePath = `.env.${mode}`;
+logger.info("Modo de ejecución - /server.js:", mode);
 
+const envFilePath = `.env.${mode}`;
 dotenv.config({ path: envFilePath });
 
 app.use(cors());
+app.use(addLogger);
 
-// Sessions con mongo
+logger.info("Configurando sesiones con MongoDB - /server.js...");
 app.use(session({
     store: MongoStore.create({
         mongoUrl: 'mongodb://localhost:27017/ecommerce',
@@ -69,7 +70,7 @@ app.use(session({
 }));
 
 app.use(routerApp);
-app.use((handleErrors()))
+app.use(handleErrors());
 app.use(passport.session());
 
 app.engine('hbs', Handlebars.engine({
@@ -81,6 +82,8 @@ app.engine('hbs', Handlebars.engine({
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'hbs');
+
+logger.info("Configuración de vistas y motor de plantillas establecida - /server.js");
 
 // Routes
 app.use('/', viewsRouter);
@@ -96,39 +99,47 @@ app.post('/upload-file', multerSingleUploader, (req, res) => {
     res.send('¡Imagen subida con éxito!');
 });
 
+logger.info("Rutas configuradas - /server.js");
+
 // Endpoint para obtener la configuración
 app.get('/api/config', (req, res) => {
     res.json({ port: objectConfig.port });
+    logger.info("Configuración enviada - /server.js:", objectConfig.port);
 });
 
 const manager = new ProductDaoFS(`${__dirname}/file/products.json`);
-
-httpServer.listen(PORT, (error) => {
-    if (error) {
-        console.log(error);
-    } else {
-        console.log(`Server listening on port ${PORT}`);
-    }
-});
+logger.info("Gestor de productos inicializado - /server.js");
 
 io.on('connection', (socket) => {
-    console.log('Nuevo cliente conectado');
+    logger.info('Nuevo cliente conectado - /server.js');
 
     socket.on('message', (data) => {
-        console.log('Mensaje recibido:', data);
+        logger.info('Mensaje recibido - /server.js:', data);
         io.emit('message', data);
     });
 
     socket.on('disconnect', () => {
-        console.log('Cliente desconectado');
+        logger.info('Cliente desconectado - /server.js');
     });
 
     socket.on('addProduct', (productData) => {
         handleAddProduct(productData, manager, io);
-        console.log('datos recibidos desde el cliente', productData);
+        logger.info('Datos recibidos desde el cliente - /server.js', productData);
     });
 
     socket.on('eliminarProducto', (productId) => {
         deleteProduct(productId, manager, io);
+        logger.info('Producto eliminado - /server.js:', productId);
     });
 });
+
+export const getServer = () => httpServer.listen(port, error => {
+    if (error) {
+        logger.error("Error al iniciar el servidor - /server.js:", error);
+    } else {
+        logger.info('Servidor escuchando en el puerto  - /server.js' + port);
+    }
+});
+
+logger.info("Servidor inicializado - /server.js");
+getServer();

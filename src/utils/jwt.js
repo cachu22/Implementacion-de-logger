@@ -1,14 +1,14 @@
-import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken';
+import { logger } from './logger.js';
 
-export const PRIVATE_KEY = 's3cr3etc@d3r'
+export const PRIVATE_KEY = 's3cr3etc@d3r';
 
 export const generateToken = user => {
-    console.log('Log de jwt.js-generateToken 1- :', user);
+    logger.info('Log de jwt.js - Generación de token iniciada con usuario - src/utils/jwt.js:', user); // Log para iniciar la generación del token
     const token = jwt.sign(user, PRIVATE_KEY, { expiresIn: '24h' });
-    console.log('Log de jwt.js-generateToken 2- Generated token:', token); // Log del token generado
+    logger.info('Log de jwt.js - Token generado - src/utils/jwt.js:', token); // Log del token generado
     return token;
 };
-
 
 // import jwt from 'jsonwebtoken'
 

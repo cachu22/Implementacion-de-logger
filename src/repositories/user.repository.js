@@ -1,4 +1,5 @@
-import UserDto from "../dtos/users.dto.js"
+import UserDto from "../dtos/users.dto.js";
+import { logger } from "../utils/logger.js";
 
 export default class UserRepository {
     constructor(userDao) {
@@ -12,8 +13,8 @@ export default class UserRepository {
 
     getUser = async (filter) => {
         const user = await this.userDao.getOne(filter);
-        console.log('user en getUser-user.repository', user);
-        return user
+        logger.info('Usuario en getUser - user.repository - src/repositories/user.repository.js', user); // Log info
+        return user;
     }
 
     getUserInfo = async (filter) => {
@@ -23,7 +24,9 @@ export default class UserRepository {
 
     createUser = async (user) => {
         const newUser = new UserDto(user);
-        return await this.userDao.create(newUser);
+        const createdUser = await this.userDao.create(newUser);
+        logger.info('Usuario creado - user.repository - src/repositories/user.repository.js', createdUser); // Log info
+        return createdUser;
     }
 
     updateUser = async (uid, userToUpdate) => {
@@ -31,11 +34,13 @@ export default class UserRepository {
             userToUpdate.fullname = `${userToUpdate.first_name || ''} ${userToUpdate.last_name || ''}`.trim();
         }
         const updatedUser = await this.userDao.update(uid, userToUpdate);
+        logger.info('Usuario actualizado - user.repository - src/repositories/user.repository.js', updatedUser); // Log info
         return updatedUser ? new UserDto(updatedUser) : null;
     }
 
     deleteUser = async (uid) => {
         const deletedUser = await this.userDao.delete(uid);
+        logger.info('Usuario eliminado - user.repository - src/repositories/user.repository.js', deletedUser); // Log info
         return deletedUser ? new UserDto(deletedUser) : null;
     }
 }

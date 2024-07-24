@@ -3,6 +3,6 @@ export default class UserDto {
         this.email = user.email;
         this.fullname = `${user.first_name || ''} ${user.last_name || ''}`.trim();
 
-        console.log('Fullname generado en DTO:', this.fullname);
+        logger.info('Fullname generado en DTO - Log de /src/dtos/users.dto.js:', this.fullname);
     }
 }

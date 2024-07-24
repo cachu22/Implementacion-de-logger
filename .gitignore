@@ -5,8 +5,6 @@ node_modules
 clase0
 
 # Ignora el archivo .env.development
-.env.development
-.env
 
 # ignora comentado.js
 .comentado.js

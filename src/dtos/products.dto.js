@@ -1,9 +1,11 @@
+import { logger } from "../utils/logger.js";
+
 export default class ProductDto {
     constructor(product) {
         if (!product) {
             throw new Error('Product data is required');
         }
-        console.log('Generando DTO para producto:', product);
+        logger.info('Generando DTO para producto - Log de /src/dtos/product.dto.js:', product);
         this.id = product._id;
         this.title = product.title;
         this.model = product.model;

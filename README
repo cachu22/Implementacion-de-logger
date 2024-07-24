@@ -5,3 +5,24 @@ Se instaló uuid para generar IDs unicas
 
 //Importante
 Faltaria ver el tema de las contraseñas con GitHub que se pueden loguear solo colocando cualquier Caracter. Se deja para cuando tenga un poco de tiempo.
+
+
+
+//Usando Artillery
+artillery quick --count 40 --num 50 "http://localhost:8000/cookies/simple" -o simple.json
+
+artillery quick --count 40 --num 50 "http://localhost:8000/cookies/compleja" -o simple.json
+
+artillery run config.yml --output testPerformance.json
+artillery report testPerformance.json -o testResult.
+
+
+Ejemplo
+node process.js -d -p 3000 --mode development -u root --letters a b s
+node process.js -p 3000 -u root 2 a 5 --letters a b s
+
+Iniciar el servidor en docker
+Para producción
+docker run -e NODE_ENV=production -p 8080:8080 dockeroperation
+Para desarrollo
+docker run -e NODE_ENV=development -p 8080:8080 dockeroperation
